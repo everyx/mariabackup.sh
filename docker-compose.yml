@@ -1,0 +1,62 @@
+version: "3.9"
+
+x-service-default: &service-default
+  image: "mariadb:10.8.3"
+  cap_add:
+    - SYS_NICE  # CAP_SYS_NICE
+  ulimits:
+    # If using --memlock or the iouring in InnoDB in MariaDB 10.6,
+    # you will need to raise the LimitMEMLOCK limit.
+    #
+    # @see https://mariadb.com/kb/en/systemd/#configuring-limitmemlock
+    # @see https://github.com/MariaDB/mariadb-docker/issues/454
+    #
+    memlock: 262144 # max locked-in-memory address space (in bytes)
+  environment:
+    MARIADB_ROOT_PASSWORD: "password"
+    MARIADB_DATABASE: "test"
+    MARIADB_MYSQL_LOCALHOST_USER: "1"
+    MARIADB_MYSQL_LOCALHOST_GRANTS: "RELOAD, PROCESS, LOCK TABLES, BINLOG MONITOR"
+    MARIADB_USER: backup
+    MARIADB_PASSWORD: backup-password
+
+services:
+  db:
+    <<: *service-default
+    volumes:
+        - data:/var/lib/mysql
+        # - mysqld:/run/mysqld
+    ports:
+        - target: 3306
+          published: 3306
+          protocol: tcp
+          mode: host
+    command:
+        - --character-set-server=utf8mb4
+        - --collation-server=utf8mb4_unicode_520_ci
+        - --skip-character-set-client-handshake
+        - --log-bin
+        - --server-id=1
+        - --log-basename=mariadb-1
+
+  backup:
+    <<: *service-default
+    init: true
+    depends_on:
+      - db
+    volumes:
+      - data:/var/lib/mysql:ro
+    #   - mysqld:/run/mysqld:ro
+      - ./mariabackup.sh:/mariabackup.sh
+      - ./backup:/backup
+    environment:
+      - TZ=Asia/Shanghai
+      - LOG_LEVEL=debug
+      - MYSQL_HOST=db
+      - MYSQL_USER=backup
+      - MYSQL_PASSWORD=backup-password
+    entrypoint: /usr/bin/sleep infinity
+
+volumes:
+  data:
+  mysqld:
