@@ -14,6 +14,8 @@
 # .
 # └── <full_n>/
 
+__version=v0.0.1
+
 ProgName=$(basename "$0")
 
 DEBUG=0
@@ -426,6 +428,14 @@ while [[ $# -gt 0 ]]; do
     -h | --help)
         show_help
         exit 0
+        ;;
+    -d | --debug)
+        set_log_level $DEBUG
+        shift
+        ;;
+    -v | --version)
+        echo $__version
+        shift
         ;;
     -l | --loglevel)
         set_log_level "$2"
