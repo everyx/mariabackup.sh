@@ -1,0 +1,8 @@
+#
+# https://github.com/googleapis/repo-automation-bots/tree/master/packages/release-please
+
+# Release strategy
+releaseType: simple
+
+# Release to GitHub
+handleGHRelease: true
