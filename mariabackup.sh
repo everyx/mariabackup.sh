@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 
+#
 # /backup/
 # ├── <full_1>/
 # │   ├── backup.mb.xz
@@ -23,54 +23,48 @@ INFO=1
 WARN=2
 ERROR=3
 
-__log_level=${MYSQL_BACKUP_LOG_LEVEL:-1}
+__log_level=${MYSQL_BACKUP_LOG_LEVEL:-${INFO}}
 
 function set_log_level() {
     if [[ $# -eq 0 ]]; then
-        __log_level=$INFO
-    else
-        case $1 in
-        debug)
-            __log_level=$DEBUG
-            ;;
-        info)
-            __log_level=$INFO
-            ;;
-        warn)
-            __log_level=$WARN
-            ;;
-        error)
-            __log_level=$ERROR
-            ;;
-        *)
-            __log_level=$INFO
-            ;;
-        esac
+        return 0
     fi
+
+    case $1 in
+    "$DEBUG" | "debug")
+        __log_level=$DEBUG
+        ;;
+    "$INFO" | "info")
+        __log_level=$INFO
+        ;;
+    "$WARN" | "warn")
+        __log_level=$WARN
+        ;;
+    "$ERROR" | "error")
+        __log_level=$ERROR
+        ;;
+    esac
 }
 
 function log_level_name() {
     if [[ $# -eq 0 ]]; then
-        echo "INFO"
-    else
-        case $1 in
-        "$DEBUG")
-            echo "DEBUG"
-            ;;
-        "$INFO")
-            echo "INFO"
-            ;;
-        "$WARN")
-            echo "WARN"
-            ;;
-        "$ERROR")
-            echo "ERROR"
-            ;;
-        *)
-            echo "INFO"
-            ;;
-        esac
+        return 0
     fi
+
+    case $1 in
+    "$DEBUG")
+        echo "DEBUG"
+        ;;
+    "$INFO")
+        echo "INFO"
+        ;;
+    "$WARN")
+        echo "WARN"
+        ;;
+    "$ERROR")
+        echo "ERROR"
+        ;;
+    esac
 }
 
 function log() {
@@ -177,7 +171,6 @@ __backup_name_pattern=".*/[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}$
 __compress=${MYSQL_BACKUP_COMPRESS:-1}
 __compress_target_file=backup.mb.xz
 
-
 function most_recent_backup() {
     base_dir="${__backup_root_dir}"
     if [[ $# -gt 0 ]]; then
@@ -210,11 +203,11 @@ function purge() {
     days=${MYSQL_BACKUP_KEEP_DAYS:-0}
     if [[ $days -gt 0 ]]; then
         log $DEBUG "- Retention policy (days): $days"
-        
+
         cmd="find \"$__backup_root_dir\" -mindepth 1 -maxdepth 1 -type d -ctime +$days"
-        
+
         days_count=$(eval "$cmd | wc -l") && i=$((i + days_count))
-        
+
         eval "$cmd -exec rm -rf {} \;"
     fi
 
