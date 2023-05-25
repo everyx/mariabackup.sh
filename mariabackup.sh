@@ -266,7 +266,12 @@ function run_backup() {
 
         incr_root_dir=$(most_recent_backup)
         target_dir=$(new_backup "$incr_root_dir")
+
         incremental_basedir=$(most_recent_backup "$incr_root_dir")
+        if [[ -z "$incremental_basedir" ]]; then
+            incremental_basedir=$incr_root_dir
+        fi
+
         cmd="$cmd --target-dir=$target_dir --incremental-basedir=$incremental_basedir"
     fi
 
@@ -278,6 +283,7 @@ function run_backup() {
         cmd="$cmd --extra-lsndir=$target_dir --stream=mbstream | xz >$target_file"
     fi
 
+    log $DEBUG "- CMD: \"$cmd\""
     mkdir -p "$target_dir" && output=$(eval "$cmd" 2>&1)
 
     # If file xtrabackup_checkpoints not exist, backup command run failed, remove this backup
@@ -403,6 +409,7 @@ function run_restore() {
 
     cmd="mariabackup --copy-back --target-dir=\"$target_dir\" --datadir=\"$__mysql_root_datadir\""
 
+    log $DEBUG "- CMD: \"$cmd\""
     if ! output=$(eval "$cmd" 2>&1); then
         # shellcheck disable=SC2001
         log $ERROR "- Error:\n$(echo "$output" | sed 's/^/\t\t\t\t/')"
