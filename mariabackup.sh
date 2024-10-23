@@ -148,7 +148,7 @@ function __mysql_conn_opt() {
 function check_daemon() {
     log $DEBUG "Checking daemon..."
     eval "mariadb --execute=quit $(__mysql_conn_opt)" &>/dev/null
-    return 0
+    return $?
 }
 
 function show_help_backup() {
