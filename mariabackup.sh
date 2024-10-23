@@ -14,7 +14,7 @@
 # .
 # └── <full_n>/
 
-__version=v0.0.1
+__version=v0.1.0
 
 ProgName=$(basename "$0")
 
@@ -306,10 +306,12 @@ function run_backup() {
 }
 
 function show_help_restore() {
-    echo "Usage: $ProgName [options] restore [<args>]"
+    echo "Usage: $ProgName [options] restore [<args>] [path]"
     echo ""
     echo "Restore a backup with mariabackup"
     echo ""
+    echo "path:                     data restore path. Default:"
+    echo "                              'MYSQL_RESTORE_DIR' env variable used by default, '/data' used if not set"
     echo "args:"
     echo "  --name                  backup name. Default: the most recent one if not specified"
     show_help_general_options
@@ -366,7 +368,7 @@ function prepare() {
     return 0
 }
 
-__mysql_root_datadir="/data"
+__mysql_restore_dir=${MYSQL_RESTORE_DIR:-"/data"}
 
 function run_restore() {
     if check_daemon; then
@@ -390,6 +392,10 @@ function run_restore() {
             backup_dir="$__backup_root_dir/${1#*=}"
             shift
             ;;
+        *)
+            __mysql_restore_dir=$1
+            shift
+            ;;
         esac
     done
 
@@ -405,9 +411,15 @@ function run_restore() {
 
     log $DEBUG "Starting restore..."
 
-    rm -rf "$__mysql_root_datadir"
+    if [[ -d "${__mysql_restore_dir}" ]]; then
+        local restore_backup_dir
+        restore_backup_dir=${__mysql_restore_dir}.bak.$(date +"%Y%m%d%H:%M:%S")
+        log $INFO "restore dir ${__mysql_restore_dir} exist, backup to ${restore_backup_dir} ..."
+        rsync -a --delete "${__mysql_restore_dir}" "${restore_backup_dir}"
+        rm -rf "${__mysql_restore_dir:?}/"*
+    fi
 
-    cmd="mariabackup --copy-back --target-dir=\"$target_dir\" --datadir=\"$__mysql_root_datadir\""
+    cmd="mariabackup --copy-back --target-dir=\"$target_dir\" --datadir=\"$__mysql_restore_dir\""
 
     log $DEBUG "- CMD: \"$cmd\""
     if ! output=$(eval "$cmd" 2>&1); then

@@ -72,11 +72,13 @@ The backup folder names have the following format:
 ## Restore
 
 ```bash
->./mariabackup.sh restore -h
-Usage: mariabackup.sh [options] restore [<args>]
+❯ ./mariabackup.sh restore -h
+Usage: mariabackup.sh [options] restore [<args>] [path]
 
 Restore a backup with mariabackup
 
+path:                     data restore path. Default:
+                              'MYSQL_RESTORE_DIR' env variable used by default, '/data' used if not set
 args:
   --name                  backup name. Default: the most recent one if not specified
 
@@ -110,3 +112,4 @@ options:
 - `MYSQL_BACKUP_KEEP_DAYS`: maximum age of full backups
 - `MYSQL_BACKUP_KEEP_N`: maximum number of full backups
 - `MYSQL_BACKUP_LOG_LEVEL`: log level, one of debug, info, warn, error
+- `MYSQL_RESTORE_DIR`: data restore path, default: `/data`
